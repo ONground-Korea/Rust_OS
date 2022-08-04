@@ -1,21 +1,36 @@
 #![no_std] // Rust 표준 라이브러리를 링크하지 않도록 합니다
 #![no_main] // Rust 언어에서 사용하는 실행 시작 지점 (main 함수)을 사용하지 않습니다
+#![feature(custom_test_frameworks)]
+#![test_runner(crate::test_runner)]
+#![reexport_test_harness_main = "test_main"]
+
 
 use core::panic::PanicInfo;
 mod vga_buffer;
 
-static HELLO: &[u8] = b"Hello World!";
-
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    // vga_buffer::print_something();
-
-    // use core::fmt::Write;
-    // vga_buffer::WRITER.lock().write_str("Hello again").unwrap();
-    // write!(vga_buffer::WRITER.lock(), ", some numbers: {} {}", 42, 1.337).unwrap();
-
     println!("Hello World{}", "!");
+
+    #[cfg(test)]
+    test_main();
+
     loop {}
+}
+
+#[cfg(test)]
+fn test_runner(tests: &[&dyn Fn()]) {
+    println!("Running {} tests", tests.len());
+    for test in tests {
+        test();
+    }
+}
+
+#[test_case]
+fn trivial_assertion() {
+    print!("trivial assertion... ");
+    assert_eq!(1, 1);
+    println!("[ok]");
 }
 
 /// 패닉이 일어날 경우, 이 함수가 호출됩니다.
